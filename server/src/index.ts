@@ -9,6 +9,21 @@ import path from 'path';
 // Load environment variables
 dotenv.config();
 
+const isDevelopment = process.env.NODE_ENV === 'development';
+const configuredOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+if (process.env.NODE_ENV === 'production') {
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+    throw new Error('Set JWT_SECRET to a random value of at least 32 characters in production.');
+  }
+  if (configuredOrigins.length === 0) {
+    throw new Error('Set CORS_ORIGINS to the deployed frontend origin in production.');
+  }
+}
+
 // Import database connection
 import './config/database';
 
@@ -30,8 +45,16 @@ const app: Express = express();
 const PORT = process.env.PORT || 8080;
 
 // Apply middlewares
-// Enable CORS
-app.use(cors());
+// Restrict browser API access to the deployed frontend in production.
+app.use(isDevelopment
+  ? cors()
+  : cors({
+      origin: (origin, callback) => {
+        // Permit non-browser health checks and same-origin requests without an Origin header.
+        if (!origin || configuredOrigins.includes(origin)) return callback(null, true);
+        return callback(new Error('Origin is not allowed by CORS'));
+      },
+    }));
 
 // Enhance security with Helmet
 app.use(helmet());
@@ -49,7 +72,6 @@ app.use(morgan('dev'));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Rate limiting
-const isDevelopment = process.env.NODE_ENV === 'development';
 const positiveInteger = (value: string | undefined, fallback: number) => {
   const parsed = Number(value);
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback;
@@ -94,7 +116,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log('Server is running on port ' + PORT);
 });
 
 export default app;
