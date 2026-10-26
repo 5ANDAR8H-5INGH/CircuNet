@@ -25,4 +25,4 @@ Create a Render Static Site for the same repository. Set root directory `client`
 ## 5. CORS and smoke check
 After the static site has a URL, set API `CORS_ORIGINS` to its exact HTTPS origin and redeploy the API. Verify `https://<api-host>/health`, then try registration/login, creating a listing and requirement, checking compatible matches, and submitting/accepting an exchange request.
 
-Free web services may sleep while idle, so the first request can be slow. Replace illustrative economic and emissions factors with documented values before using estimates for real decisions.
+Free web services may sleep while idle, so the first request can be slow. Replace illustrative economic and emissions factors with documented values before using estimates for real d
